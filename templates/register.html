@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="flex justify-center items-center min-h-screen bg-gray-100">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-96">
+        <h2 class="text-2xl font-bold text-center text-gray-700">Register</h2>
+        <form method="POST" action="/register" class="mt-4 space-y-4">
+            <input type="text" name="plant_name" placeholder="Plant Name" required class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+            
+            <input type="text" name="location_lat" placeholder="Latitude" required class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+            
+            <input type="text" name="location_long" placeholder="Longitude" required class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+            
+            <input type="text" name="city" placeholder="City" required class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+            
+            <input type="text" name="username" placeholder="Username" required class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+            
+            <input type="password" name="password" placeholder="Password" required class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+            
+            <button type="submit" class="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition">Register</button>
+        </form>
+        <p class="text-center mt-4 text-gray-600">Already have an account? <a href="/login" class="text-blue-500 hover:underline">Login here</a></p>
+    </div>
+</body>
+</html>
+
