@@ -134,19 +134,6 @@ def fetch_weather_data(lat, lon):
         print("Error fetching weather data:", e)
         return None
 
-def predict_energy(location):
-    weather_data = fetch_weather_data(location)
-    if weather_data is None:
-        return None
-
-    sunlight_intensity, wind_speed, temperature = weather_data
-
-    # Dummy prediction formula (Replace with ML model)
-    solar_energy = (100 - sunlight_intensity) * 0.2
-    wind_energy = wind_speed * 0.5
-
-    return {"solar_energy": round(solar_energy, 2), "wind_energy": round(wind_energy, 2)}
-
 @app.route("/forecast", methods=["GET"])
 @login_required
 def forecast_energy():
@@ -189,5 +176,4 @@ def dashboard():
 
 # =========================== RUN FLASK SERVER =========================== #
 if __name__ == "__main__":
-    # db.create_all()  # Ensure database tables are created
     app.run(debug=True)
