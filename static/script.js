@@ -1,36 +1,43 @@
 async function fetchForecast() {
     try {
-        let response = await fetch('/forecast');
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
+        let response = await fetch('/dashboard-data'); 
         let data = await response.json();
-        console.log("API Response:", data);  // Debugging
 
-        if (data.error) {
-            alert("Error fetching data: " + data.error);
-            return;
-        }
-
-        const labels = ["Solar Energy", "Wind Energy"];
-        const values = [data.solar_energy, data.wind_energy];
+        const dates = data.solar.map(entry => entry.date);
+        const solarValues = data.solar.map(entry => entry.energy);
+        const windValues = data.wind.map(entry => entry.energy);
 
         const ctx = document.getElementById("forecastChart").getContext("2d");
         new Chart(ctx, {
-            type: "bar",
+            type: "line",
             data: {
-                labels: labels,
-                datasets: [{
-                    label: "Predicted Energy (MW)",
-                    data: values,
-                    backgroundColor: ["orange", "blue"]
-                }]
+                labels: dates,
+                datasets: [
+                    {
+                        label: "Solar Energy (MW)",
+                        data: solarValues,
+                        backgroundColor: "orange",
+                        borderColor: "orange",
+                        fill: false
+                    },
+                    {
+                        label: "Wind Energy (MW)",
+                        data: windValues,
+                        backgroundColor: "blue",
+                        borderColor: "blue",
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
             }
         });
+
     } catch (error) {
         console.error("Fetch error:", error);
-        alert("Error fetching forecast data. Check console for details.");
+        alert("Error fetching forecast data.");
     }
 }
 
