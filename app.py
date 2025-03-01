@@ -180,7 +180,7 @@ def predict_energy():
 
                 # Make Predictions
                 # solar_pred = solar_model.predict([[temperature, max_temperature, sunlight_intensity]])[0]
-                wind_pred = wind_model.predict([[wind_speed, wind_direction]])[0]
+                wind_pred = wind_model.predict([[wind_speed, wind_direction, hour, day, month]])[0]
                 print(f"Predicted Wind: {wind_pred}")
 
                 # Store Predictions
