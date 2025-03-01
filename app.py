@@ -147,63 +147,70 @@ def fetch_weather_data(lat, lon):
 @app.route("/predict", methods=["GET"])
 @login_required
 def predict_energy():
-    lat = current_user.location_lat
-    lon = current_user.location_long
-
-    print(lat)
-    print(lon)
-
-    # Fetch weather data
-    weather_data = fetch_weather_data(lat, lon)
-    if not weather_data or not isinstance(weather_data, list):  # Ensure valid data
-        return jsonify({"error": "Failed to fetch data"}), 500
-
     try:
+        lat = current_user.location_lat
+        lon = current_user.location_long
+        print(f"User ID: {current_user.id}, Location: {lat}, {lon}")  # Debugging log
+
+        # Fetch weather data
+        weather_data = fetch_weather_data(lat, lon)
+        if not weather_data or not isinstance(weather_data, list):
+            print("Error: Weather data is empty or incorrect format.")
+            return jsonify({"error": "Failed to fetch weather data"}), 500
+
         solar_entries = []
         wind_entries = []
 
         for data in weather_data:
-            date = data["date"]
-            temperature = data.get("temperature", None)
-            max_temperature = data.get("max_temperature", None)
-            sunlight_intensity = data.get("sunlight_intensity", None)
-            wind_speed = data.get("wind_speed", None)
-            wind_direction = data.get("wind_direction", None)
+            try:
+                date = data["date"]
+                temperature = data.get("temperature")
+                max_temperature = data.get("max_temperature")
+                sunlight_intensity = data.get("sunlight_intensity")
+                wind_speed = data.get("wind_speed")
+                wind_direction = data.get("wind_direction")
 
-            # Ensure valid inputs before prediction
-            if None in [temperature, max_temperature, sunlight_intensity, wind_speed, wind_direction]:
-                print(f"Skipping invalid weather data: {data}")
-                continue  # Skip invalid data rows
+                hour = date.hour
+                day = date.day
+                month = date.month
 
-            # Make Predictions
-            solar_pred = solar_model.predict([[temperature, max_temperature, sunlight_intensity]])[0]
-            wind_pred = wind_model.predict([[wind_speed, wind_direction]])[0]
+                if None in [temperature, max_temperature, sunlight_intensity, wind_speed, wind_direction]:
+                    print(f"Skipping invalid data: {data}")
+                    continue  # Skip invalid rows
 
-            # Store Predictions
-            solar_entries.append(SolarForecast(
-                user_id=current_user.id, date=date, temperature=temperature,
-                max_temperature=max_temperature, sunlight_intensity=sunlight_intensity,
-                predicted_solar_energy=solar_pred
-            ))
+                # Make Predictions
+                # solar_pred = solar_model.predict([[temperature, max_temperature, sunlight_intensity]])[0]
+                wind_pred = wind_model.predict([[wind_speed, wind_direction]])[0]
+                print(f"Predicted Wind: {wind_pred}")
 
-            wind_entries.append(WindForecast(
-                user_id=current_user.id, date=date, wind_speed=wind_speed,
-                wind_direction=wind_direction, predicted_wind_energy=wind_pred
-            ))
+                # Store Predictions
+                # solar_entries.append(SolarForecast(
+                #     user_id=current_user.id, date=date, temperature=temperature,
+                #     max_temperature=max_temperature, sunlight_intensity=sunlight_intensity,
+                #     predicted_solar_energy=solar_pred
+                # ))
 
-        # Bulk insert to optimize performance
+                wind_entries.append(WindForecast(
+                    user_id=current_user.id, date=date, wind_speed=wind_speed,
+                    wind_direction=wind_direction, predicted_wind_energy=wind_pred
+                ))
+
+            except Exception as e:
+                print("Error processing weather entry:", e)
+
+        # Bulk insert into the database
         if solar_entries:
             db.session.bulk_save_objects(solar_entries)
         if wind_entries:
             db.session.bulk_save_objects(wind_entries)
-
+        
         db.session.commit()
         return jsonify({"message": "Predictions stored successfully"})
 
     except Exception as e:
         db.session.rollback()
-        print("Database Commit Error:", e)
-        return jsonify({"error": "Database error"}), 500
+        print("Prediction API Error:", str(e))  # Log error
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/dashboard')
