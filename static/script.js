@@ -1,24 +1,22 @@
-// Function to trigger energy prediction on login
+// Function to trigger prediction before fetching forecast data
 async function triggerPrediction() {
     try {
-        let response = await fetch('/predict', { method: 'GET' });
+        let response = await fetch('/predict', { method: 'GET' }); // ✅ Change to GET
         let data = await response.json();
 
-        console.log("Prediction response:", data); // Debugging log
-
         if (data.error) {
-            console.error("Prediction failed:", data.error);
+            console.error("Prediction Error:", data.error);
             alert("Prediction failed: " + data.error);
-            return false;
+            return false; // Stop execution if prediction fails
         }
 
-        console.log("Prediction completed:", data);
-        return true;
+        console.log("Prediction data received:", data);
+        return true; // Continue only if prediction is successful
 
     } catch (error) {
-        console.error("Error in prediction request:", error);
+        console.error("Error triggering prediction:", error);
         alert("Error predicting energy data.");
-        return false;
+        return false; // Stop execution
     }
 }
 
@@ -88,7 +86,7 @@ async function fetchForecast() {
 
 // Function to initialize the dashboard
 async function initializeDashboard() {
-    let predictionSuccess = await triggerPrediction(); // ✅ Ensure prediction completes first
+    let predictionSuccess = await triggerPrediction(); // ✅ Ensure prediction completes
 
     if (predictionSuccess) {
         await fetchForecast(); // ✅ Fetch only if prediction succeeded
@@ -97,33 +95,5 @@ async function initializeDashboard() {
     }
 }
 
-// Function to handle login submission
-async function handleLogin(event) {
-    event.preventDefault(); // Prevent default form submission
-
-    let formData = new FormData(document.getElementById("loginForm"));
-    let response = await fetch("/login", {
-        method: "POST",
-        body: formData
-    });
-
-    if (response.redirected) {
-        console.log("Login successful, triggering prediction...");
-        await triggerPrediction(); // ✅ Predict immediately after login
-        window.location.href = response.url; // Redirect to dashboard
-    } else {
-        let text = await response.text();
-        alert("Login failed: " + text);
-    }
-}
-
-// Attach login event listener
-document.addEventListener("DOMContentLoaded", function () {
-    let loginForm = document.getElementById("loginForm");
-    if (loginForm) {
-        loginForm.addEventListener("submit", handleLogin);
-    } else {
-        console.log("Not on login page, initializing dashboard...");
-        initializeDashboard(); // Auto-fetch on dashboard load
-    }
-});
+// Load dashboard data when page loads
+// window.onload = initializeDashboard;

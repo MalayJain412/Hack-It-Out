@@ -1,31 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Energy Forecast Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Welcome, {{ current_user.username }}!</h1>
-    <button onclick="window.location.href='/logout'">Logout</button>
-    <h2>Renewable Energy Forecast</h2>
-    <canvas id="forecastChart"></canvas>
-    <table border="1">
-        <tr>
-            <th>Date</th>
-            <th>Sunlight Intensity (%)</th>
-            <th>Wind Speed (m/s)</th>
-            <th>Temperature (°C)</th>
-        </tr>
-        {% for forecast in forecasts %}
-        <tr>
-            <td>{{ forecast.date }}</td>
-            <td>{{ forecast.sunlight_intensity }}</td>
-            <td>{{ forecast.wind_speed }}</td>
-            <td>{{ forecast.temperature }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    
+<body class="bg-gray-100 text-gray-900">
+
+    <!-- Navbar -->
+    <nav class="bg-blue-600 p-4 flex justify-between items-center">
+        <h1 class="text-white text-2xl font-semibold">Energy Forecast Dashboard</h1>
+        <div>
+            <span class="text-white font-medium">Welcome, {{ current_user.username }}!</span>
+            <button onclick="window.location.href='/logout'" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded ml-4">
+                Logout
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto p-6">
+
+        <!-- Forecast Chart -->
+        <h2 class="text-xl font-semibold text-center mb-4">Renewable Energy Forecast</h2>
+        <div class="bg-white shadow-md rounded p-6">
+            <canvas id="forecastChart"></canvas>
+        </div>
+
+        <!-- Data Table -->
+        <div class="mt-6">
+            <h2 class="text-xl font-semibold text-center mb-4">Forecast Data</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse bg-white shadow-md rounded">
+                    <thead>
+                        <tr class="bg-blue-600 text-white">
+                            <th class="px-4 py-2">Date</th>
+                            <th class="px-4 py-2">Sunlight Intensity (%)</th>
+                            <th class="px-4 py-2">Wind Speed (m/s)</th>
+                            <th class="px-4 py-2">Temperature (°C)</th>
+                            <th class="px-4 py-2">Wind Energy</th>
+                            <th class="px-4 py-2">Solar Energy</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for forecast in forecasts %}
+                        <tr class="border-b">
+                            <td class="px-4 py-2 text-center">{{ forecast.date }}</td>
+                            <td class="px-4 py-2 text-center">{{ forecast.sunlight_intensity }}</td>
+                            <td class="px-4 py-2 text-center">{{ forecast.wind_speed }}</td>
+                            <td class="px-4 py-2 text-center">{{ forecast.temperature }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
 </body>
 </html>
