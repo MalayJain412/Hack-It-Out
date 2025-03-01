@@ -12,13 +12,13 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:@localhost/energy_
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = "your_secret_key"
 
-# Initialize Database & Encryption
+
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
-# =========================== DATABASE MODELS =========================== #
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     plant_name = db.Column(db.String(100), nullable=False)
@@ -47,7 +47,7 @@ def load_user(user_id):
 def home():
     return redirect(url_for('login'))
 
-# =========================== USER AUTH ROUTES =========================== #
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -96,7 +96,7 @@ def logout():
     # flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
-# =========================== WEATHER API & PREDICTION =========================== #
+
 def fetch_weather_data(lat, lon):
     API_KEY = "11ce42b4689bce3362df94c0ab388127"
     URL = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
@@ -133,6 +133,19 @@ def fetch_weather_data(lat, lon):
     except requests.exceptions.RequestException as e:
         print("Error fetching weather data:", e)
         return None
+
+def predict_energy(location):
+    weather_data = fetch_weather_data(location)
+    if weather_data is None:
+        return None
+
+    sunlight_intensity, wind_speed, temperature = weather_data
+
+    # Dummy prediction formula (Replace with ML model)
+    solar_energy = (100 - sunlight_intensity) * 0.2
+    wind_energy = wind_speed * 0.5
+
+    return {"solar_energy": round(solar_energy, 2), "wind_energy": round(wind_energy, 2)}
 
 @app.route("/forecast", methods=["GET"])
 @login_required
