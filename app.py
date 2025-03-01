@@ -36,6 +36,22 @@ class FutureForecast(db.Model):
     wind_speed = db.Column(db.Float, nullable=False)
     temperature = db.Column(db.Float, nullable=False)
 
+class SolarForecast(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    date = db.Column(db.String(50), nullable=False)
+    temperature = db.Column(db.Float, nullable=False)
+    sunlight_intensity = db.Column(db.Float, nullable=False)
+    predicted_solar_energy = db.Column(db.Float, nullable=False)  # Prediction Output
+
+class WindForecast(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    date = db.Column(db.String(50), nullable=False)
+    temperature = db.Column(db.Float, nullable=False)
+    wind_speed = db.Column(db.Float, nullable=False)
+    predicted_wind_energy = db.Column(db.Float, nullable=False)  # Prediction Output
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -96,7 +112,6 @@ def logout():
     # flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
-
 def fetch_weather_data(lat, lon):
     API_KEY = "11ce42b4689bce3362df94c0ab388127"
     URL = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=metric"
@@ -106,46 +121,82 @@ def fetch_weather_data(lat, lon):
         response.raise_for_status()
         data = response.json()
 
-        print("Weather API Response:", data)  # Debugging
-
-        if "list" not in data:
-            print("Error: 'list' key not found in API response")
-            return None
-
         forecast_data = []
         for i in range(0, len(data["list"]), 8):  # Every 8th entry (~24 hours apart)
             entry = data["list"][i]
             date = entry["dt_txt"].split()[0]
+            temperature = entry["main"]["temp"]
             sunlight_intensity = 100 - entry["clouds"]["all"]
             wind_speed = entry["wind"]["speed"]
-            temperature = entry["main"]["temp"]
 
             forecast_data.append({
                 "date": date,
+                "temperature": temperature,
                 "sunlight_intensity": sunlight_intensity,
-                "wind_speed": wind_speed,
-                "temperature": temperature
+                "wind_speed": wind_speed
             })
 
-        print("Processed Forecast Data:", forecast_data)  # Debugging
         return forecast_data
 
     except requests.exceptions.RequestException as e:
         print("Error fetching weather data:", e)
         return None
 
-def predict_energy(location):
-    weather_data = fetch_weather_data(location)
-    if weather_data is None:
-        return None
+@app.route("/predict", methods=["GET"])
+@login_required
+def predict_energy():
+    lat = current_user.location_lat
+    lon = current_user.location_long
 
-    sunlight_intensity, wind_speed, temperature = weather_data
+    weather_data = fetch_weather_data(lat, lon)
+    if not weather_data:
+        return jsonify({"error": "Failed to fetch data"}), 500
 
-    # Dummy prediction formula (Replace with ML model)
-    solar_energy = (100 - sunlight_intensity) * 0.2
-    wind_energy = wind_speed * 0.5
+    try:
+        for data in weather_data:
+            date = data["date"]
+            temperature = data["temperature"]
+            sunlight_intensity = data["sunlight_intensity"]
+            wind_speed = data["wind_speed"]
 
-    return {"solar_energy": round(solar_energy, 2), "wind_energy": round(wind_energy, 2)}
+            # Solar Energy Prediction
+            solar_pred = solar_model.predict([[temperature, sunlight_intensity]])[0]
+
+            # Wind Energy Prediction
+            wind_pred = wind_model.predict([[temperature, wind_speed]])[0]
+
+            # Store Solar Prediction
+            existing_solar = SolarForecast.query.filter_by(user_id=current_user.id, date=date).first()
+            if existing_solar is None:
+                solar_entry = SolarForecast(
+                    user_id=current_user.id,
+                    date=date,
+                    temperature=temperature,
+                    sunlight_intensity=sunlight_intensity,
+                    predicted_solar_energy=solar_pred
+                )
+                db.session.add(solar_entry)
+
+            # Store Wind Prediction
+            existing_wind = WindForecast.query.filter_by(user_id=current_user.id, date=date).first()
+            if existing_wind is None:
+                wind_entry = WindForecast(
+                    user_id=current_user.id,
+                    date=date,
+                    temperature=temperature,
+                    wind_speed=wind_speed,
+                    predicted_wind_energy=wind_pred
+                )
+                db.session.add(wind_entry)
+
+        db.session.commit()
+        return jsonify({"message": "Predictions stored successfully"})
+
+    except Exception as e:
+        db.session.rollback()
+        print("Database Commit Error:", e)
+        return jsonify({"error": "Database error"}), 500
+
 
 @app.route("/forecast", methods=["GET"])
 @login_required
