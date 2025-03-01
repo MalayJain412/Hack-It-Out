@@ -235,8 +235,13 @@ def forecast_energy():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    forecasts = FutureForecast.query.filter_by(user_id=current_user.id).all()
-    return render_template('dashboard.html', forecasts=forecasts, current_user=current_user)
+    solar_forecasts = SolarForecast.query.filter_by(user_id=current_user.id).all()
+    wind_forecasts = WindForecast.query.filter_by(user_id=current_user.id).all()
+
+    solar_data = [{"date": f.date, "energy": f.predicted_solar_energy} for f in solar_forecasts]
+    wind_data = [{"date": f.date, "energy": f.predicted_wind_energy} for f in wind_forecasts]
+
+    return render_template('dashboard.html', solar_data=solar_data, wind_data=wind_data, current_user=current_user)
 
 # =========================== RUN FLASK SERVER =========================== #
 if __name__ == "__main__":
