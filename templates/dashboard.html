@@ -6,9 +6,26 @@
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
-    <h1>Welcome, {{ session['user'] }}!</h1>
-    <button onclick="logout()">Logout</button>
+    <h1>Welcome, {{ current_user.username }}!</h1>
+    <button onclick="window.location.href='/logout'">Logout</button>
     <h2>Renewable Energy Forecast</h2>
     <canvas id="forecastChart"></canvas>
+    <table border="1">
+        <tr>
+            <th>Date</th>
+            <th>Sunlight Intensity (%)</th>
+            <th>Wind Speed (m/s)</th>
+            <th>Temperature (°C)</th>
+        </tr>
+        {% for forecast in forecasts %}
+        <tr>
+            <td>{{ forecast.date }}</td>
+            <td>{{ forecast.sunlight_intensity }}</td>
+            <td>{{ forecast.wind_speed }}</td>
+            <td>{{ forecast.temperature }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    
 </body>
 </html>
